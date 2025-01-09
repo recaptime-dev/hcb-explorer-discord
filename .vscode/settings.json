@@ -1,0 +1,26 @@
+{
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/.pnp.*": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "dotenv.enableAutocloaking": false,
+  "emojisense.languages": {
+    "markdown": true,
+    "plaintext": {
+      "markupCompletionsEnabled": true,
+      "emojiDecoratorsEnabled": false
+    },
+    "scminput": true,
+    "git-commit": true,
+    "typescript": {
+      "markupCompletionsEnabled": true,
+      "unicodeCompletionsEnabled": true
+    }
+  },
+  // required in vscode-eslint < v3.0.10 only
+  "eslint.useFlatConfig": true,
+  "conventionalCommits.scopes": [
+    "global"
+  ]
+}
