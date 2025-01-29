@@ -90,12 +90,15 @@ function parseOrgType(org_id: string | null, org_type: Organization["category"])
 
 export async function handleOrgDataEmbed(interact: CommandInteraction, data: HcbOrgResponse) {
   const { id, category, logo, background_image, balances, slug } = data.body
+
+  // buttons
   const donationBtn = new ButtonBuilder()
     .setStyle(ButtonStyle.Link).setLabel("Donate")
     .setURL(data.body.donation_link || "https://hcb.hackclub.com")
   const website = new ButtonBuilder()
     .setStyle(ButtonStyle.Link).setLabel("Website")
     .setURL(data.body.website || `https://hcb.hackclub.com/${slug}`)
+
   const bal_normalized = {
     total_raised: numberWithCommas(Math.abs(balances.total_raised/ 100)),
     current: numberWithCommas(Math.abs(balances.balance_cents / 100)),
@@ -194,5 +197,6 @@ export async function handleOrgBalanceEmbed(interact: CommandInteraction, data: 
 }
 
 export async function handleTxnDataEmbed(_interact: CommandInteraction, data: HcbTxn) {
+  // to be implemented soon
   console.log(data)
 }

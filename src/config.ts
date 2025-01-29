@@ -1,10 +1,12 @@
+import { REST, Routes } from "discord.js";
 import pkgMetadata from "../package.json";
 
-export default {
+const env = {
   port: Number(process.env.PORT) || 3000,
   appId: process.env.DISCORD_BOT_APP_ID,
   botToken: process.env.DISCORD_BOT_TOKEN,
   sentryDSN: process.env.SENTRY_DSN || "",
+  url: process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3000}`,
   repo: process.env.REPO_URL || pkgMetadata.repository.url,
   support: {
     discord: process.env.DISCORD_INVITE_CODE || "FyBYQrJtUX",
@@ -31,3 +33,7 @@ export default {
     "org_RRu9K4", // https://hcb.hackclub.com/lorebooks-wiki
   ]
 }
+
+export const discordApIRest = new REST({ version: '10' }).setToken(env?.botToken || "");
+
+export default env

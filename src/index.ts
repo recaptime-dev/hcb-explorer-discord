@@ -1,11 +1,11 @@
 import "./lib/sentry";
 import Sentry from './lib/sentry';
 
-import { Events, GatewayIntentBits, ActivityType, Collection, EmbedBuilder } from 'discord.js';
+import { Events, GatewayIntentBits, ActivityType, Collection, EmbedBuilder, Routes } from 'discord.js';
 import { ExtendedClient } from './lib/extendedClient';
 import { serve as honoServe, } from '@hono/node-server';
-import { Hono } from "hono";
-import config from './config';
+import { Context, Hono } from "hono";
+import config, { discordApIRest } from './config';
 
 /** Check if we have the Discord bot token first */
 if (!config.botToken) {
@@ -44,6 +44,11 @@ app.get("/ping", (c) => {
 app.get("/invite", (c) => {
   return c.redirect(`https://discord.com/oauth2/authorize?client_id=${config.appId}`)
 })
+app.get("/internals/whoami", async(c: Context) => {
+  const whoami = await client.user
+
+  return c.json(whoami)
+})
 
 import { ping, donateLinks, inviteLink } from './commands/utility';
 import { hcb } from './commands/hcb';
@@ -55,6 +60,7 @@ client.once(Events.ClientReady, async readyClient => {
     port: config.port
   });
   console.log('[api-server]', `Hono server running on port ${config.port}`);
+  console.log('[api-server]', `accessible at ${config.url}`)
 
   client.commands.set("ping", ping);
   client.commands.set("donate", donateLinks);

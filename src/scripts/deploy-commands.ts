@@ -1,5 +1,5 @@
-import { DiscordAPIError, REST, Routes } from 'discord.js';
-import config from '../config';
+import { DiscordAPIError, Routes } from 'discord.js';
+import config, { discordApIRest } from '../config';
 
 const commands = [];
 
@@ -13,12 +13,11 @@ commands.push(inviteLink.data.toJSON());
 
 (async () => {
   try {
-      if (!config.botToken || !config.appId) {
+      if (config.botToken == undefined || config.appId == undefined) {
         throw new Error('Bot token and/or Discord application is not defined in the configuration.');
       }
-      const rest = new REST({ version: '10' }).setToken(config.botToken);
     
-      const result = await rest.put(
+      const result = await discordApIRest.put(
         Routes.applicationCommands(config.appId),
         { body: commands }
       );
@@ -33,5 +32,6 @@ commands.push(inviteLink.data.toJSON());
     } else {
       console.log(error);
     }
+    process.exit(1)
   }
 })();
