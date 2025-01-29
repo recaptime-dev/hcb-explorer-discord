@@ -1,4 +1,10 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, CommandInteraction, EmbedBuilder, Interaction } from "discord.js";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  CommandInteraction,
+  EmbedBuilder
+} from "discord.js";
 import Sentry from "./sentry"
 import config from "../config";
 const hcbApi = "https://hcb.hackclub.com/api/v3"
@@ -45,6 +51,10 @@ type HcbOrg = {
   users: Array<HcbOrgUser>;
   message?: string;
 };
+
+type HcbTxn = {
+  id: string
+}
 
 export type HcbOrgResponse = {
   status: number;
@@ -125,12 +135,12 @@ function parseOrgType(org_id: string | null, org_type: HcbOrgCategory) {
     orgTypeText = "Hack Club HQ"
   } else if (org_type == "hack_club") {
     orgTypeText = "Local Hack Club"
-  } else if (org_type == "hackathon") {
+  } else if ((org_type == "hackathon" || org_type == "nonprofit") && isOpenSourceProject == true) {
+    orgTypeText = "Open-source Project/Organization"
+  } else if (org_type == "hackathon" && isOpenSourceProject == false) {
     orgTypeText = "Hackathon"
-    if (isOpenSourceProject == true) orgTypeText += " / Open-source Project or Organization"
-  } else if (org_type == "nonprofit") {
+  } else if (org_type == "nonprofit" && isOpenSourceProject == false) {
     orgTypeText = "Non-profit Organization"
-    if (isOpenSourceProject == true) orgTypeText +=" / Open-source Project"
   } else if (org_type == "robotics_team") {
     orgTypeText = "FIRST / Robotics team"
   } else if (org_type == "climate") {
@@ -141,15 +151,13 @@ function parseOrgType(org_id: string | null, org_type: HcbOrgCategory) {
 }
 
 export async function handleOrgDataEmbed(interact: CommandInteraction, data: HcbOrgResponse) {
-  const { id, category, logo, background_image, balances } = data.body
-  let donationBtn = new ButtonBuilder()
+  const { id, category, logo, background_image, balances, slug } = data.body
+  const donationBtn = new ButtonBuilder()
     .setStyle(ButtonStyle.Link).setLabel("Donate")
-    .setEmoji(`💸`)
-    .setDisabled(true)
-  let website = new ButtonBuilder()
-    .setStyle(ButtonStyle.Link).setLabel("Donate")
-    .setEmoji(`:globe_with_meridians:`)
-    .setDisabled(true)
+    .setURL(data.body.donation_link || "https://hcb.hackclub.com")
+  const website = new ButtonBuilder()
+    .setStyle(ButtonStyle.Link).setLabel("Website")
+    .setURL(data.body.website || `https://hcb.hackclub.com/${slug}`)
   const bal_normalized = {
     total_raised: (balances.total_raised ?? 0) / 100,
     current: (balances.balance_cents ?? 0) / 100,
@@ -176,8 +184,9 @@ export async function handleOrgDataEmbed(interact: CommandInteraction, data: Hcb
     },
     title: data.body.name || "Unknown organization",
     url: data.body.href || "https://hcb.hackclub.com",
+
   }).addFields(
-    { name: "Organization ID", value: id || "null"},
+    { name: "Organization ID and slug", value: `\`${id}\` | \`${slug}\``},
     { name: "Type", value: parseOrgType(id, category)},
     { name: "Total raised in USD", value: bal_normalized.total_raised.toString()},
     { name: "Current balance in USD", value: bal_normalized.current.toString(), inline: true},
@@ -187,8 +196,13 @@ export async function handleOrgDataEmbed(interact: CommandInteraction, data: Hcb
   if (background_image !== null) base.setImage(background_image)
   if (data.body.public_message !== null) base.setDescription(data.body.public_message)
   
-  if (data.body.donation_link !== null) {
-     
+  // Disable the buttons if the fields are empty
+  if (data.body.donation_link == null) {
+    donationBtn.setDisabled(true)
+  }
+
+  if (data.body.website == null) {
+    website.setDisabled(true)
   }
   
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(donationBtn, website)
@@ -197,4 +211,50 @@ export async function handleOrgDataEmbed(interact: CommandInteraction, data: Hcb
     embeds: [base],
     components: [row1]
   })
+};
+
+export async function handleOrgBalanceEmbed(interact: CommandInteraction, data: HcbOrgResponse) {
+  const { balances, logo } = data.body
+  const bal_normalized = {
+    total_raised: (balances.total_raised ?? 0) / 100,
+    current: (balances.balance_cents ?? 0) / 100,
+    incoming: (balances.incoming_balance_cents ?? 0) / 100,
+    outcoming: (balances.fee_balance_cents ?? 0) / 100,
+  }
+
+  if (data.error) {
+    return await interact.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Something went wrong on our side")
+          .setDescription("Don't worry, we have logged the problem on our side. We're looking into it soon.")
+          .setColor("Red")
+      ]
+    })
+  }
+
+  const base = new EmbedBuilder({
+    author: {
+      name: "HCB Explorer",
+      url: config.repo,
+      icon_url: config.brand_icon_url
+    },
+    title: data.body.name || "Unknown organization",
+    url: data.body.href || "https://hcb.hackclub.com",
+  }).addFields(
+    { name: "Total raised in USD", value: bal_normalized.total_raised.toString()},
+    { name: "Current balance in USD", value: bal_normalized.current.toString(), inline: true},
+    { name: "Incoming balance in USD", value: bal_normalized.incoming.toString(), inline: true},
+    { name: "Outgoing balance in USD", value: bal_normalized.outcoming.toString(), inline: true},
+  )
+
+  if (logo !== null) base.setThumbnail(logo);
+
+  return await interact.reply({
+    embeds: [base]
+  })
+}
+
+export async function handleTxnDataEmbed(_interact: CommandInteraction, data: HcbTxn) {
+  console.log(data)
 }

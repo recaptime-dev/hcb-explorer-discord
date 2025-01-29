@@ -1,14 +1,13 @@
 {
   "name": "@recaptime-dev/hcb-explorer-discord",
   "license": "MPL-2.0",
-  "packageManager": "yarn@4.5.3",
   "scripts": {
     "start:build ": "npm run build && dotenvx run -f .env.production -- node dist/index.js",
     "dev:build": "npm run build && dotenvx run -f .env.development -- node dist/index.js",
     "start": "dotenvx run -f .env.production -- tsx src/index.ts",
     "dev": "dotenvx run -f .env.development -- tsx watch src/index.ts",
     "dev:commands": "dotenvx run -f .env.development -- tsx src/scripts/deploy-commands.ts",
-    "build": "tsc --build && yarn sentry:sourcemaps",
+    "build": "tsc --build && npm run sentry:sourcemaps",
     "test": "echo \"Error: no test specified\" && exit 1",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org recaptime-dev --project hcb-explorer-discord ./dist && sentry-cli sourcemaps upload --org recaptime-dev --project hcb-explorer-discord ./dist"
   },

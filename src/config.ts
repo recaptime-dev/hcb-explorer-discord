@@ -24,6 +24,8 @@ export default {
     more_details: process.env.DONATE_DETAILS_URL || "https://recaptime.dev/donate"
   },
   brand_icon_url: "https://hcb.hackclub.com/brand/hcb-icon-icon-dark.png",
+  // currently HCB doesn't categorize open-source projects yet, so we had
+  // to verify ourselves manually for now.
   opensource_org_ids: [
     "org_G3ud13", // https://hcb.hackclub.com/recaptime-dev
     "org_RRu9K4", // https://hcb.hackclub.com/lorebooks-wiki

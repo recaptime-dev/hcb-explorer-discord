@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   CommandInteraction,
-  Client,
   EmbedBuilder
 } from "discord.js";
 import projectConfig from "../config"
@@ -11,17 +10,16 @@ export const ping = {
     .setName("ping")
     .setDescription("Replies with pong + latency"),
   async execute(
-    interaction: CommandInteraction,
-    client: Client
+    interaction: CommandInteraction
   ) {
     const startTime = Date.now();
-    const wsPing = client.ws.ping;
+    const wsPing = interaction.client.ws.ping;
 
     const pingOps = new EmbedBuilder({
       title: "🏓 Pong!",
-      description: `Websocket latency: ${wsPing}ms`,
+      description: `Websocket latency: \`${wsPing}ms\``,
       footer: {
-        text: `Command executed in ${Date.now() - startTime}ms`
+        text: `Command executed in \`${Date.now() - startTime}ms\``
       }
     }).toJSON()
 
@@ -36,13 +34,12 @@ export const donateLinks = {
     .setName("donate")
     .setDescription("Support the project by donating to RecapTime.dev"),
   async execute(
-    interaction: CommandInteraction,
-    client: Client
+    interaction: CommandInteraction
   ) {
     const donateOps = new EmbedBuilder({
       title: "Donate to RecapTime.dev",
       author: {
-        name: "Recap Time Squad",
+        name: "Recap Time Squad Crew",
         icon_url: "https://avatars.githubusercontent.com/u/55875459?v=4",
         url: "https://recaptime.dev"
       },
@@ -54,7 +51,7 @@ export const donateLinks = {
         },
         {
           name: "Open Collective",
-          value: `https://opencollective.com/${projectConfig.donate.opencollective}`
+          value: `https://opencollective.com/${projectConfig.donate.opencollective}/contribute`
         },
         {
           name: "Crypto and other options",
@@ -64,10 +61,29 @@ export const donateLinks = {
       footer: {
         text: "Recap Time Squad is fiscally sponsored by The Hack Foundation (dba Hack Club), a US 501(c)(3) non-profit with EIN 81-2908499."
       }
-    }).toJSON()
+    })
 
     await interaction.reply({
       embeds: [donateOps]
     });
+  }
+}
+
+export const inviteLink = {
+  data: new SlashCommandBuilder()
+    .setName("invite")
+    .setDescription("Invite HCB Explorer into your server"),
+  async execute(interaction: CommandInteraction) {
+    return await interaction.reply({
+      embeds: [
+        new EmbedBuilder({
+          author: {
+            name: "Recap Time Squad Crew",
+            icon_url: "https://avatars.githubusercontent.com/u/55875459?v=4",
+            url: "https://recaptime.dev"
+          },
+        })
+      ]
+    })
   }
 }

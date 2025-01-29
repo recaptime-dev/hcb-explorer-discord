@@ -12,9 +12,18 @@ export const hcb = {
           opt.setName("name")
             .setDescription("The name or ID of the organization.")
             .setRequired(true)
-          )
+        )
+    )
+    .addSubcommand(sub =>
+      sub.setName("balance")
+        .setDescription("Show a HCB organization's balances, upcoming deposits/donations, and total money raised and spent.")
+        .addStringOption(opt =>
+          opt.setName("name")
+            .setDescription("The name or ID of the organization.")
+            .setRequired(true)
+        )
     ),
-  async execute(interaction: CommandInteraction & ChatInputCommandInteraction, client: Client) {
+  async execute(interaction: CommandInteraction & ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === "org") {
@@ -25,7 +34,7 @@ export const hcb = {
         return await notFoundEmbed(interaction)
       }
 
-      await handleOrgDataEmbed(interaction, api);
+      return await handleOrgDataEmbed(interaction, api);
     }
   }
 }
