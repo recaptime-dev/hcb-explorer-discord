@@ -19,7 +19,7 @@ export const ping = {
       title: "🏓 Pong!",
       description: `Websocket latency: \`${wsPing}ms\``,
       footer: {
-        text: `Command executed in \`${Date.now() - startTime}ms\``
+        text: `Command executed in ${Date.now() - startTime}ms`
       }
     }).toJSON()
 
@@ -59,7 +59,7 @@ export const donateLinks = {
         }
       ],
       footer: {
-        text: "Recap Time Squad is fiscally sponsored by The Hack Foundation (dba Hack Club), a US 501(c)(3) non-profit with EIN 81-2908499."
+        text: "Recap Time Squad is fiscally sponsored by The Hack Foundation (dba Hack Club), a US 501(c)(3) non-profit with EIN 81-2908499, but this project is not affliated with the HCB team."
       }
     })
 
@@ -82,6 +82,7 @@ export const inviteLink = {
             icon_url: "https://avatars.githubusercontent.com/u/55875459?v=4",
             url: "https://recaptime.dev"
           },
+          title: "Invite the bot to your server (or install as standalone app)"
         })
       ]
     })

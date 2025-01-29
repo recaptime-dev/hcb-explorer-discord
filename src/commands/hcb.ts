@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, Client, CommandInteraction, Interaction, SlashCommandBuilder } from "discord.js";
-import { fetchOrganization, handleOrgDataEmbed, notFoundEmbed } from "../lib/hcb";
+import { fetchOrganization, handleOrgBalanceEmbed, handleOrgDataEmbed, notFoundEmbed } from "../lib/hcb";
 
 export const hcb = {
   data: new SlashCommandBuilder()
@@ -26,7 +26,7 @@ export const hcb = {
   async execute(interaction: CommandInteraction & ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand === "org") {
+    if (subcommand === "org" || subcommand === "balance") {
       const name = interaction.options.getString("name") || "hq";
       const api = await fetchOrganization(name);
 
@@ -34,7 +34,11 @@ export const hcb = {
         return await notFoundEmbed(interaction)
       }
 
-      return await handleOrgDataEmbed(interaction, api);
+      if (subcommand === "org") {
+        return await handleOrgDataEmbed(interaction, api)
+      } else if (subcommand === "balance") {
+        return await handleOrgBalanceEmbed(interaction, api)
+      }
     }
   }
 }

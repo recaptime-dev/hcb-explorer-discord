@@ -7,50 +7,9 @@ import {
 } from "discord.js";
 import Sentry from "./sentry"
 import config from "../config";
+import { ErrorMessage, Organization } from "./hcb-types";
+import { numberWithCommas } from "./money";
 const hcbApi = "https://hcb.hackclub.com/api/v3"
-
-type HcbOrgUser = {
-  id: string;
-  object: string;
-  full_name: string;
-  admin: boolean;
-  photo: string;
-};
-
-type HcbOrgCategory =
-  | "climate"
-  | "hackathon"
-  | "hack_club"
-  | "nonprofit"
-  | "robotics_team"
-  | "hack_club_hq"
-  | null;
-
-type HcbOrg = {
-  id: string | null;
-  object: string | null;
-  href: string | null;
-  name: string | null;
-  slug: string | null;
-  website?: string;
-  category: HcbOrgCategory;
-  transparent: true;
-  demo_mode: boolean;
-  logo: string | null;
-  donation_header: string | null;
-  background_image: string | null;
-  public_message: string | null;
-  donation_link: string | null;
-  balances: {
-    balance_cents: number | null;
-    fee_balance_cents: number | null;
-    incoming_balance_cents: number | null;
-    total_raised: number | null;
-  };
-  created_at: string | null;
-  users: Array<HcbOrgUser>;
-  message?: string;
-};
 
 type HcbTxn = {
   id: string
@@ -59,7 +18,7 @@ type HcbTxn = {
 export type HcbOrgResponse = {
   status: number;
   headers: IterableIterator<[string, string]> | null;
-  body: HcbOrg;
+  body: Organization | ErrorMessage;
   error?: Error | unknown;
 }
 
@@ -74,7 +33,7 @@ export async function fetchOrganization(org: string): Promise<HcbOrgResponse> {
     const result: HcbOrgResponse = {
       status: api.status,
       headers: api.headers.entries(),
-      body: body as HcbOrg
+      body: body as Organization
     }
     console.log("[hcb-api]","Fetched organization",result)
     return result
@@ -84,28 +43,7 @@ export async function fetchOrganization(org: string): Promise<HcbOrgResponse> {
       status: 500,
       headers: null,
       body: {
-        message: "Something went wrong while fetching the organization.",
-        id: null,
-        object: null,
-        href: null,
-        name: null,
-        slug: null,
-        category: null,
-        transparent: true,
-        demo_mode: false,
-        logo: null,
-        donation_header: null,
-        background_image: null,
-        public_message: null,
-        donation_link: null,
-        balances: {
-          balance_cents: null,
-          fee_balance_cents: null,
-          incoming_balance_cents: null,
-          total_raised: null
-        },
-        created_at: null,
-        users: []
+        message: "Something went wrong while fetching the organization."
       },
       error
     }
@@ -126,7 +64,7 @@ export async function notFoundEmbed(interact: CommandInteraction) {
   })
 }
 
-function parseOrgType(org_id: string | null, org_type: HcbOrgCategory) {
+function parseOrgType(org_id: string | null, org_type: Organization["category"]): string {
   // check if it is a OSS project on HCB
   const isOpenSourceProject = config.opensource_org_ids.includes(org_id || "org_null")
 
@@ -159,10 +97,10 @@ export async function handleOrgDataEmbed(interact: CommandInteraction, data: Hcb
     .setStyle(ButtonStyle.Link).setLabel("Website")
     .setURL(data.body.website || `https://hcb.hackclub.com/${slug}`)
   const bal_normalized = {
-    total_raised: (balances.total_raised ?? 0) / 100,
-    current: (balances.balance_cents ?? 0) / 100,
-    incoming: (balances.incoming_balance_cents ?? 0) / 100,
-    outcoming: (balances.fee_balance_cents ?? 0) / 100,
+    total_raised: numberWithCommas(Math.abs(balances.total_raised/ 100)),
+    current: numberWithCommas(Math.abs(balances.balance_cents / 100)),
+    incoming: numberWithCommas(Math.abs(balances.incoming_balance_cents / 100)),
+    outcoming: numberWithCommas(Math.abs(balances.fee_balance_cents / 100)),
   }
 
   if (data.error) {
@@ -182,8 +120,8 @@ export async function handleOrgDataEmbed(interact: CommandInteraction, data: Hcb
       url: config.repo,
       icon_url: config.brand_icon_url
     },
-    title: data.body.name || "Unknown organization",
-    url: data.body.href || "https://hcb.hackclub.com",
+    title: data.body?.name || "Unknown organization",
+    url: `https://hcb.hackclub.com/${slug ?? ""}`,
 
   }).addFields(
     { name: "Organization ID and slug", value: `\`${id}\` | \`${slug}\``},
@@ -214,12 +152,12 @@ export async function handleOrgDataEmbed(interact: CommandInteraction, data: Hcb
 };
 
 export async function handleOrgBalanceEmbed(interact: CommandInteraction, data: HcbOrgResponse) {
-  const { balances, logo } = data.body
+  const { balances, logo, slug } = data.body
   const bal_normalized = {
-    total_raised: (balances.total_raised ?? 0) / 100,
-    current: (balances.balance_cents ?? 0) / 100,
-    incoming: (balances.incoming_balance_cents ?? 0) / 100,
-    outcoming: (balances.fee_balance_cents ?? 0) / 100,
+    total_raised: numberWithCommas(Math.abs(balances.total_raised/ 100)),
+    current: numberWithCommas(Math.abs(balances.balance_cents / 100)),
+    incoming: numberWithCommas(Math.abs(balances.incoming_balance_cents / 100)),
+    outcoming: numberWithCommas(Math.abs(balances.fee_balance_cents / 100)),
   }
 
   if (data.error) {
@@ -240,11 +178,11 @@ export async function handleOrgBalanceEmbed(interact: CommandInteraction, data: 
       icon_url: config.brand_icon_url
     },
     title: data.body.name || "Unknown organization",
-    url: data.body.href || "https://hcb.hackclub.com",
+    url: `https://hcb.hackclub.com/${slug ?? ""}`,
   }).addFields(
     { name: "Total raised in USD", value: bal_normalized.total_raised.toString()},
     { name: "Current balance in USD", value: bal_normalized.current.toString(), inline: true},
-    { name: "Incoming balance in USD", value: bal_normalized.incoming.toString(), inline: true},
+    { name: "Incoming balance in USD", value: bal_normalized.incoming.toString()},
     { name: "Outgoing balance in USD", value: bal_normalized.outcoming.toString(), inline: true},
   )
 
