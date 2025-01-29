@@ -1,10 +1,12 @@
 [Unit]
 Description=HCB Explorer Discord bot
+StartLimitBurst=5
+StartLimitIntervalSec=5m
 
 [Service]
 ExecStart=/home/ajhalili2006/.nix-profile/bin/npm start
 WorkingDirectory=/home/ajhalili2006/git/hcb-explorer-discord
-RestartSec=5s
+RestartSec=15s
 Restart=on-failure
 
 [Install]

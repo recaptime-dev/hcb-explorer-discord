@@ -4,6 +4,7 @@ import {
   EmbedBuilder
 } from "discord.js";
 import projectConfig from "../config"
+import env from "../config";
 
 export const ping = {
   data: new SlashCommandBuilder()
@@ -82,7 +83,8 @@ export const inviteLink = {
             icon_url: "https://avatars.githubusercontent.com/u/55875459?v=4",
             url: "https://recaptime.dev"
           },
-          title: "Invite the bot to your server (or install as standalone app)"
+          title: "Invite the bot to your server (or install as standalone app)",
+          description: `<${env.url}/install> (or via \`Add app\` in the bot profile page).`
         })
       ]
     })
