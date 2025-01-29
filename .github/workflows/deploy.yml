@@ -1,0 +1,50 @@
+name: Deployments
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/**
+      - package*.json
+      - .github/workflows/deploy.yml
+      - .env*
+  workflow_dispatch:
+
+jobs:
+  nest:
+    name: Hack Club Nest
+    runs-on: ubuntu-24.04
+    environment: 
+      name: nest/production
+      url: https://hcb-explorer-discordbot.ajhalili2006.hackclub.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get Doppler Secrets
+        id: doppler
+        uses: DopplerHQ/secrets-fetch-action@v1.3.0
+        with:
+          doppler-token: ${{secrets.DOPPLER_TOKEN}}       
+      - name: Install SSH key of bastion
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{steps.doppler.outputs.NEST_SSH_PRIVATE_KEY}}
+          name: ajhalili2006-passwordless
+          known_hosts: |
+            hackclub.app ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBNzIySdwx0OqVCH8vFBDkQwsWJ4h0mVN1F2Al840f0zuF/5BjF5TQDvlZXlTtT7NpKsBga4tkk4VMnA3lHc8WYY=
+            hackclub.app ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCkQnX8cBdKobrNL8xCoS+Z1vNRcWcmj2kGhZsgfzF91Rmj2iX/kTC4qQvm/2yYUb58AULew+tuwaZitUCIpUIA6qn41rURpzYf5Yuf0Xjy9DeJwZmBuw6jjoKMYcy1nD/eDMvSMyIKpr0Yygqfdw7F8VghJzKeG/CEqfZkBV1993ad9G0usl74gPrgIb524FeTnrNr+G3NXs53VtvBY7TrpJK2wHLlLfMm6mXk3C7AI5AYaGRo+3PndqhmGnfQndgj3oK6AZAYQHR8XXrZEZt6eptNdi5vQs+VvNZHCVLB4AO3O+IgVfVh6Pm+Y1nXk13coTXJtfI4grrxAVjIbGzrCUC9Gr34u7037xUyvgVPLMHhEWc7zw5YqBotptz0IUE6Qjffa3NaBdM4oRsdEXK5VmPlowsxeHVz0H+S8omL8stRtOA37SXhP8nepH1Eqo5/cyVo/pR0+JsEBqptHAjJ19qEz3qUl+i5YB84ewyq3hDLOA3+p8fCwcV+oZp/u9c=
+            hackclub.app ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ3pezDUZG+4bPRZg2znAuuMp42AL+rc1HGUltnNf8cA
+
+          config: |
+            Host nest
+              Hostname hackclub.app
+              User ajhalili2006
+              IdentityFile ~/.ssh/ajhalili2006-passwordless
+      - name: Update code on nest
+        run: |
+          ssh nest git -C /home/ajhalili2006/git/hcb-explorer-discord pull
+          ssh nest cp -v /home/ajhalili2006/git/hcb-explorer-discord/src/lib/hcb-explorer-discordbot-nest.service /home/ajhalili2006/.config/systemd/user
+          ssh nest bash -c "set -x; cd /home/ajhalili2006/git/hcb-explorer-discord && npm i"
+          ssh nest systemctl --user daemon-reload
+          ssh nest systemctl --user start leeksbot-nest
