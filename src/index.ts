@@ -35,18 +35,26 @@ const client = new ExtendedClient({
 const app = new Hono()
 client.commands = new Collection();
 
+// redirect to repo
 app.get("/", (c) => {
   return c.redirect(config.repo)
 })
+
+// ping for uptime
 app.get("/ping", (c) => {
   return c.json({ ok: true, message: "Pong!" })
 })
+
+// basically install links w/o redirect_uris
 app.get("/invite", (c) => {
   return c.redirect(`https://discord.com/oauth2/authorize?client_id=${config.appId}`)
 })
+app.get("/install", (c) => {
+  return c.redirect(`https://discord.com/oauth2/authorize?client_id=${config.appId}`)
+})
+
 app.get("/internals/whoami", async(c: Context) => {
   const whoami = await client.user
-
   return c.json(whoami)
 })
 
