@@ -46,5 +46,7 @@ jobs:
           ssh nest git -C /home/ajhalili2006/git/hcb-explorer-discord pull
           ssh nest cp -v /home/ajhalili2006/git/hcb-explorer-discord/src/lib/hcb-explorer-discordbot-nest.service /home/ajhalili2006/.config/systemd/user
           ssh nest bash -c "set -x; cd /home/ajhalili2006/git/hcb-explorer-discord && npm i"
+      - name: Reload systemd-user daemon and restart
+        run: |
           ssh nest systemctl --user daemon-reload
-          ssh nest systemctl --user start leeksbot-nest
+          ssh nest systemctl --user restart hcb-explorer-discordbot-nest.service
